@@ -339,17 +339,27 @@
   root.querySelector("[data-login-form]").addEventListener("submit", async function (event) {
     event.preventDefault();
     const status = root.querySelector("[data-login-status]");
-    const password = event.currentTarget.elements.password.value;
+    const password = event.currentTarget.elements.password.value.trim();
     status.textContent = "Descriptografando...";
     try {
-      const vault = await fetch(root.dataset.vaultUrl).then((response) => response.json());
-      state.data = await decryptVault(vault, password);
+      const response = await fetch(root.dataset.vaultUrl, { cache: "no-store" });
+      if (!response.ok) {
+        status.textContent = "Arquivo financeiro não encontrado no site. Publique novamente.";
+        return;
+      }
+      const vault = await response.json();
+      try {
+        state.data = await decryptVault(vault, password);
+      } catch (error) {
+        status.textContent = "Senha não confere com o arquivo financeiro publicado.";
+        return;
+      }
       event.currentTarget.reset();
       root.querySelector("[data-lock-screen]").hidden = true;
       root.querySelector("[data-private-area]").hidden = false;
       wirePrivateArea();
     } catch (error) {
-      status.textContent = "Senha incorreta ou arquivo indisponível.";
+      status.textContent = "Não foi possível carregar o arquivo financeiro.";
     }
   });
 })();
