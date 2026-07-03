@@ -120,6 +120,34 @@ a:hover {
 .site-nav a {
   color: var(--ink);
   font-size: 0.94rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(184, 92, 56, 0.24);
+  background: linear-gradient(135deg, rgba(231, 198, 175, 0.78), rgba(255, 250, 243, 0.95));
+  color: var(--accent-strong);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.nav-financeiro {
+  border-color: rgba(102, 122, 100, 0.26);
+}
+
+.nav-financeiro:hover .nav-icon-financeiro {
+  background: var(--accent-strong);
+  color: var(--surface-strong);
 }
 
 .site-nav a:hover,
