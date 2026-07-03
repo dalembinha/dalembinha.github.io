@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Financeiro | Dalembinha's Site</title>
+  <meta name="description" content="Área protegida Financeiro Digite a senha para descriptografar os dados no seu navegador. Senha Entrar Todos os mercados Todas as categorias Compras Produtos Mercados Categorias">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/financeiro.css">
+</head>
+<body data-page-type="financeiro" data-page-slug="financeiro">
+  <div class="site-bg"></div>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="brand-mark">Dalembinha's Site</span>
+      <span class="brand-tag">Canções à mesa, receitas no coração.</span>
+    </a>
+    <nav class="site-nav" aria-label="Principal">
+      <a href="/">Home</a>
+      <a href="/musicas/">Músicas</a>
+      <a href="/receitas/">Receitas</a>
+      <a href="/financeiro/">Financeiro</a>
+    </nav>
+  </header>
+
+  <main class="site-main">
+<article class="
+page-generic">
+  <section class="page-shell">
+    <header class="hero">
+      <h1>Financeiro</h1>
+      <p class="hero-copy">Consulta privada de compras, mercados e histórico de preços.</p>
+    </header>
+
+    <section class="content-card prose">
+      <div id="financeiro-app" class="financeiro-app" data-vault-url="/static/financeiro/vault.json">
+  <section class="financeiro-lock" data-lock-screen>
+    <div>
+      <p class="financeiro-eyebrow">Área protegida</p>
+      <h2>Financeiro</h2>
+      <p>Digite a senha para descriptografar os dados no seu navegador.</p>
+    </div>
+    <form class="financeiro-login" data-login-form>
+      <label>
+        <span>Senha</span>
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">Entrar</button>
+      <p class="financeiro-status" data-login-status></p>
+    </form>
+  </section>
+
+  <section class="financeiro-private" data-private-area hidden>
+    <div class="financeiro-toolbar">
+      <input type="search" data-search placeholder="Buscar produto, mercado ou categoria">
+      <select data-market-filter><option value="">Todos os mercados</option></select>
+      <select data-category-filter><option value="">Todas as categorias</option></select>
+    </div>
+    <div class="financeiro-tabs" role="tablist" aria-label="Financeiro">
+      <button type="button" data-view="compras" class="is-active">Compras</button>
+      <button type="button" data-view="produtos">Produtos</button>
+      <button type="button" data-view="mercados">Mercados</button>
+      <button type="button" data-view="categorias">Categorias</button>
+    </div>
+    <div data-financeiro-output></div>
+  </section>
+</div>
+
+<script src="/static/js/financeiro.js" defer></script>
+    </section>
+  </section>
+</article>
+  </main>
+  <script src="/static/js/site.js"></script>
+</body>
+</html>
