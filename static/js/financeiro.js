@@ -336,18 +336,38 @@
     render();
   }
 
+  async function fetchVault() {
+    const urls = [
+      root.dataset.vaultUrl,
+      "/static/financeiro/vault.json"
+    ].filter(Boolean);
+    let lastError = "";
+    for (const url of urls) {
+      try {
+        const response = await fetch(url, {
+          cache: "no-store",
+          credentials: "omit",
+          mode: "cors"
+        });
+        if (!response.ok) {
+          lastError = `HTTP ${response.status}`;
+          continue;
+        }
+        return response.json();
+      } catch (error) {
+        lastError = `${error.name}: ${error.message}`;
+      }
+    }
+    throw new Error(lastError || "falha de rede");
+  }
+
   root.querySelector("[data-login-form]").addEventListener("submit", async function (event) {
     event.preventDefault();
     const status = root.querySelector("[data-login-status]");
     const password = event.currentTarget.elements.password.value.trim();
     status.textContent = "Descriptografando...";
     try {
-      const response = await fetch(root.dataset.vaultUrl, { cache: "no-store" });
-      if (!response.ok) {
-        status.textContent = "Arquivo financeiro não encontrado no site. Publique novamente.";
-        return;
-      }
-      const vault = await response.json();
+      const vault = await fetchVault();
       try {
         state.data = await decryptVault(vault, password);
       } catch (error) {
@@ -359,7 +379,7 @@
       root.querySelector("[data-private-area]").hidden = false;
       wirePrivateArea();
     } catch (error) {
-      status.textContent = "Não foi possível carregar o arquivo financeiro.";
+      status.textContent = `Não foi possível carregar o arquivo financeiro: ${error.message}`;
     }
   });
 })();
