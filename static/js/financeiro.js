@@ -363,8 +363,9 @@
 
   root.querySelector("[data-login-form]").addEventListener("submit", async function (event) {
     event.preventDefault();
+    const form = event.currentTarget;
     const status = root.querySelector("[data-login-status]");
-    const password = event.currentTarget.elements.password.value.trim();
+    const password = form.elements.password.value.trim();
     status.textContent = "Descriptografando...";
     try {
       const vault = await fetchVault();
@@ -374,7 +375,7 @@
         status.textContent = "Senha não confere com o arquivo financeiro publicado.";
         return;
       }
-      event.currentTarget.reset();
+      form.reset();
       root.querySelector("[data-lock-screen]").hidden = true;
       root.querySelector("[data-private-area]").hidden = false;
       wirePrivateArea();
