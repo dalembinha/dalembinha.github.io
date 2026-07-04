@@ -2,9 +2,19 @@
   const root = document.querySelector("#financeiro-app");
   if (!root) return;
 
+  const categoryMeta = {
+    mercado: { label: "Mercado", tone: "mercado" },
+    farmacia: { label: "Farmácia", tone: "farmacia" },
+    material: { label: "Material", tone: "material" },
+    outros: { label: "Outros", tone: "outros" }
+  };
+
+  const categoryViews = new Set(["mercado", "farmacia", "material", "outros"]);
   const state = {
     data: null,
-    view: "compras",
+    view: "mercado",
+    previousView: "mercado",
+    productSlug: "",
     search: "",
     market: "",
     category: ""
@@ -36,10 +46,33 @@
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 
+  function slugify(value) {
+    return String(value || "item")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "item";
+  }
+
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, function (char) {
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char];
     });
+  }
+
+  function categoryKey(value) {
+    const key = slugify(value || "outros");
+    return categoryMeta[key] ? key : "outros";
+  }
+
+  function categoryLabel(value) {
+    return categoryMeta[categoryKey(value)].label;
+  }
+
+  function categoryChip(value) {
+    const key = categoryKey(value);
+    return `<span class="financeiro-chip financeiro-chip-${key}">${escapeHtml(categoryLabel(key))}</span>`;
   }
 
   function b64ToBytes(value) {
@@ -104,9 +137,41 @@
       .sort((a, b) => String(a).localeCompare(String(b), "pt-BR"));
   }
 
-  function fillSelect(select, values, label) {
+  function fillSelect(select, values, label, formatter) {
     select.innerHTML = `<option value="">${label}</option>` +
-      values.map((value) => `<option>${escapeHtml(value)}</option>`).join("");
+      values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(formatter ? formatter(value) : value)}</option>`).join("");
+  }
+
+  function viewCategory() {
+    return categoryViews.has(state.view) ? state.view : "";
+  }
+
+  function viewItems() {
+    const category = viewCategory();
+    return (state.data.items || []).filter((item) => !category || item.categoria_nota === category);
+  }
+
+  function viewNotes() {
+    const category = viewCategory();
+    return (state.data.notes || []).filter((note) => !category || note.categoria_nota === category);
+  }
+
+  function filteredItems(baseRows) {
+    const term = state.search.toLowerCase();
+    return baseRows.filter((item) => {
+      const haystack = [
+        item.descricao_original,
+        item.produto,
+        item.marca,
+        item.categoria,
+        item.categoria_nota,
+        item.estabelecimento
+      ].join(" ").toLowerCase();
+      if (term && !haystack.includes(term)) return false;
+      if (state.market && item.estabelecimento !== state.market) return false;
+      if (state.category && item.categoria !== state.category) return false;
+      return true;
+    });
   }
 
   function productSummaries(items) {
@@ -116,14 +181,19 @@
       if (!groups.has(name)) groups.set(name, []);
       groups.get(name).push(item);
     });
+    const seen = new Map();
     return [...groups].map(([name, rows]) => {
       const prices = rows.map((row) => asNumber(row.preco_total)).filter((value) => value !== null);
       const sorted = [...rows].sort((a, b) => `${a.data || ""}-${a.item_id || ""}`.localeCompare(`${b.data || ""}-${b.item_id || ""}`));
       const last = sorted[sorted.length - 1] || {};
+      const baseSlug = slugify(name);
+      const count = seen.get(baseSlug) || 0;
+      seen.set(baseSlug, count + 1);
       return {
+        slug: count ? `${baseSlug}-${count + 1}` : baseSlug,
         produto: name,
         marca: last.marca || "",
-        categoria: last.categoria || "",
+        categoria: last.categoria || last.categoria_nota || "outros",
         compras: rows.length,
         menor: prices.length ? Math.min(...prices) : null,
         media: prices.length ? prices.reduce((sum, value) => sum + value, 0) / prices.length : null,
@@ -150,82 +220,54 @@
         compras: rows.length,
         total,
         medio: totals.length ? total / totals.length : null,
+        primeiraData: rows.map((row) => row.data).filter(Boolean).sort()[0] || "",
         ultimaData: rows.map((row) => row.data).filter(Boolean).sort().slice(-1)[0] || ""
       };
     }).sort((a, b) => b.total - a.total);
   }
 
-  function categorySummaries(items) {
-    const groups = new Map();
-    items.forEach((item) => {
-      const name = item.categoria || "sem categoria";
-      if (!groups.has(name)) groups.set(name, []);
-      groups.get(name).push(item);
-    });
-    return [...groups].map(([name, rows]) => {
-      const totals = rows.map((row) => asNumber(row.preco_total)).filter((value) => value !== null);
-      const total = totals.reduce((sum, value) => sum + value, 0);
-      return {
-        categoria: name,
-        itens: rows.length,
-        total,
-        medio: totals.length ? total / totals.length : null
-      };
-    }).sort((a, b) => b.total - a.total);
-  }
-
-  function filteredItems() {
-    const term = state.search.toLowerCase();
-    return (state.data.items || []).filter((item) => {
-      const haystack = [
-        item.descricao_original,
-        item.produto,
-        item.marca,
-        item.categoria,
-        item.estabelecimento
-      ].join(" ").toLowerCase();
-      if (term && !haystack.includes(term)) return false;
-      if (state.market && item.estabelecimento !== state.market) return false;
-      if (state.category && item.categoria !== state.category) return false;
-      return true;
-    });
-  }
-
-  function statsHtml() {
-    const notes = state.data.notes || [];
-    const items = state.data.items || [];
+  function statsHtml(notes, items) {
     const total = notes.map((note) => asNumber(note.valor_total)).filter((value) => value !== null).reduce((sum, value) => sum + value, 0);
     return `
       <div class="financeiro-stats">
         <div><span>Notas</span><strong>${notes.length}</strong></div>
         <div><span>Itens</span><strong>${items.length}</strong></div>
-        <div><span>Mercados</span><strong>${unique(notes, "estabelecimento").length}</strong></div>
+        <div><span>Estabelecimentos</span><strong>${unique(notes, "estabelecimento").length}</strong></div>
         <div><span>Total</span><strong>${money(total)}</strong></div>
       </div>
     `;
   }
 
-  function row(cells) {
-    return `<tr>${cells.map((cell) => `<td data-label="${escapeHtml(cell.label)}">${cell.value || ""}</td>`).join("")}</tr>`;
+  function row(cells, category) {
+    return `<tr class="financeiro-row-${categoryKey(category)}">${cells.map((cell) => `<td data-label="${escapeHtml(cell.label)}">${cell.value || ""}</td>`).join("")}</tr>`;
   }
 
-  function renderCompras() {
-    const rows = filteredItems().sort((a, b) => String(b.data || "").localeCompare(String(a.data || "")));
+  function productButton(item) {
+    const name = productName(item);
+    const summary = productSummaries(state.data.items || []).find((entry) => entry.produto === name);
+    const slug = summary ? summary.slug : slugify(name);
+    return `<button type="button" class="financeiro-product-button" data-product-slug="${escapeHtml(slug)}">${escapeHtml(name)}</button>`;
+  }
+
+  function renderItems(title, emptyLabel) {
+    const baseItems = viewItems();
+    const rows = filteredItems(baseItems).sort((a, b) => String(b.data || "").localeCompare(String(a.data || "")));
     return `
-      ${statsHtml()}
+      <h2 class="financeiro-view-title">${escapeHtml(title)}</h2>
+      ${statsHtml(viewNotes(), baseItems)}
       <div class="financeiro-table-wrap">
         <table>
-          <thead><tr><th>Data</th><th>Produto</th><th>Categoria</th><th>Mercado</th><th>Qtd</th><th>Preço</th><th>Referência</th></tr></thead>
+          <thead><tr><th>Data</th><th>Produto</th><th>Categoria</th><th>Estabelecimento</th><th>Qtd</th><th>Preço</th><th>Referência</th></tr></thead>
           <tbody>
             ${rows.map((item) => row([
               { label: "Data", value: formatDate(item.data) },
-              { label: "Produto", value: `<strong>${escapeHtml(productName(item))}</strong><small>${escapeHtml(item.descricao_original || "")}</small>` },
-              { label: "Categoria", value: `<span class="financeiro-chip">${escapeHtml(item.categoria || "sem categoria")}</span>` },
-              { label: "Mercado", value: escapeHtml(item.estabelecimento || "") },
+              { label: "Produto", value: `${productButton(item)}<small>${escapeHtml(item.descricao_original || "")}</small>` },
+              { label: "Categoria", value: categoryChip(item.categoria || item.categoria_nota) },
+              { label: "Estabelecimento", value: escapeHtml(item.estabelecimento || "") },
               { label: "Qtd", value: `${formatNumber(item.quantidade)} ${escapeHtml(item.unidade || "")}` },
               { label: "Preço", value: `<span class="financeiro-price">${money(item.preco_total)}</span>` },
               { label: "Referência", value: escapeHtml(bestReference(item)) }
-            ])).join("") || `<tr><td colspan="7">Nenhum item encontrado.</td></tr>`}
+            ], item.categoria || item.categoria_nota)).join("") || `<tr><td colspan="7">${escapeHtml(emptyLabel)}</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -233,36 +275,32 @@
   }
 
   function renderProdutos() {
-    const term = state.search.toLowerCase();
-    const rows = productSummaries(filteredItems()).filter((item) => !term || item.produto.toLowerCase().includes(term));
+    const baseItems = filteredItems(state.data.items || []);
+    const rows = productSummaries(baseItems);
     return `
-      ${statsHtml()}
+      <h2 class="financeiro-view-title">Produtos</h2>
+      ${statsHtml(state.data.notes || [], state.data.items || [])}
       <div class="financeiro-grid">
         ${rows.map((item) => `
-          <article class="financeiro-card">
-            <span class="financeiro-chip">${escapeHtml(item.categoria || "sem categoria")}</span>
-            <h3>${escapeHtml(item.produto)}</h3>
+          <article class="financeiro-card financeiro-card-${categoryKey(item.categoria)}">
+            ${categoryChip(item.categoria)}
+            <h3><button type="button" class="financeiro-product-button" data-product-slug="${escapeHtml(item.slug)}">${escapeHtml(item.produto)}</button></h3>
             <dl>
               <div><dt>Compras</dt><dd>${item.compras}</dd></div>
               <div><dt>Menor</dt><dd>${money(item.menor)}</dd></div>
               <div><dt>Médio</dt><dd>${money(item.media)}</dd></div>
               <div><dt>Último</dt><dd>${money(item.ultimo)}</dd></div>
             </dl>
-            <details>
-              <summary>Histórico</summary>
-              <ul>
-                ${item.historico.map((entry) => `<li>${formatDate(entry.data)} · ${escapeHtml(entry.estabelecimento || "")} · ${money(entry.preco_total)}</li>`).join("")}
-              </ul>
-            </details>
           </article>
         `).join("") || `<p>Nenhum produto encontrado.</p>`}
       </div>
     `;
   }
 
-  function renderMercados() {
+  function renderEstabelecimentos() {
     return `
-      ${statsHtml()}
+      <h2 class="financeiro-view-title">Estabelecimentos</h2>
+      ${statsHtml(state.data.notes || [], state.data.items || [])}
       <div class="financeiro-grid">
         ${marketSummaries(state.data.notes || []).map((item) => `
           <article class="financeiro-card">
@@ -274,25 +312,101 @@
               <div><dt>Última</dt><dd>${formatDate(item.ultimaData)}</dd></div>
             </dl>
           </article>
-        `).join("") || `<p>Nenhum mercado encontrado.</p>`}
+        `).join("") || `<p>Nenhum estabelecimento encontrado.</p>`}
       </div>
     `;
   }
 
-  function renderCategorias() {
+  function renderPriceChart(rows) {
+    const points = rows
+      .map((item) => ({ item, value: asNumber(item.preco_total), date: item.data || "" }))
+      .filter((point) => point.value !== null);
+    if (!points.length) return `<div class="financeiro-empty">Sem preços suficientes para o gráfico.</div>`;
+
+    const width = 760;
+    const height = 260;
+    const left = 62;
+    const right = 22;
+    const top = 22;
+    const bottom = 48;
+    const plotWidth = width - left - right;
+    const plotHeight = height - top - bottom;
+    const values = points.map((point) => point.value);
+    let minValue = Math.min(...values);
+    let maxValue = Math.max(...values);
+    if (minValue === maxValue) {
+      minValue = Math.max(0, minValue - 1);
+      maxValue += 1;
+    }
+    const xFor = (index) => points.length === 1 ? left + plotWidth / 2 : left + (index * plotWidth) / (points.length - 1);
+    const yFor = (value) => top + ((maxValue - value) / (maxValue - minValue)) * plotHeight;
+    const coords = points.map((point, index) => ({ ...point, x: xFor(index), y: yFor(point.value) }));
+    const path = coords.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+    const area = `${left},${height - bottom} ${path} ${left + plotWidth},${height - bottom}`;
+    const grid = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+      const y = top + ratio * plotHeight;
+      const value = maxValue - ratio * (maxValue - minValue);
+      return `
+        <line class="financeiro-chart-grid" x1="${left}" y1="${y.toFixed(1)}" x2="${left + plotWidth}" y2="${y.toFixed(1)}"></line>
+        <text class="financeiro-chart-label" x="${left - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end">${escapeHtml(money(value))}</text>
+      `;
+    }).join("");
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    const labels = coords.length === 1 ? [first] : [first, last];
     return `
-      ${statsHtml()}
-      <div class="financeiro-grid">
-        ${categorySummaries(filteredItems()).map((item) => `
-          <article class="financeiro-card">
-            <span class="financeiro-chip">${escapeHtml(item.categoria)}</span>
-            <dl>
-              <div><dt>Itens</dt><dd>${item.itens}</dd></div>
-              <div><dt>Total</dt><dd>${money(item.total)}</dd></div>
-              <div><dt>Médio</dt><dd>${money(item.medio)}</dd></div>
-            </dl>
-          </article>
-        `).join("") || `<p>Nenhuma categoria encontrada.</p>`}
+      <svg class="financeiro-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Evolução do preço">
+        ${grid}
+        <line class="financeiro-chart-axis" x1="${left}" y1="${height - bottom}" x2="${left + plotWidth}" y2="${height - bottom}"></line>
+        <line class="financeiro-chart-axis" x1="${left}" y1="${top}" x2="${left}" y2="${height - bottom}"></line>
+        ${coords.length > 1 ? `<polygon class="financeiro-chart-area" points="${area}"></polygon>` : ""}
+        <polyline class="financeiro-chart-line" points="${path}"></polyline>
+        ${coords.map((point) => `
+          <circle class="financeiro-chart-point" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="5">
+            <title>${escapeHtml(`${formatDate(point.date)} · ${point.item.estabelecimento || ""} · ${money(point.value)}`)}</title>
+          </circle>
+        `).join("")}
+        ${labels.map((point, index) => `
+          <text class="financeiro-chart-label" x="${point.x.toFixed(1)}" y="${height - 16}" text-anchor="${index === 0 ? "start" : "end"}">${escapeHtml(formatDate(point.date))}</text>
+        `).join("")}
+      </svg>
+    `;
+  }
+
+  function renderProductDetail() {
+    const summary = productSummaries(state.data.items || []).find((item) => item.slug === state.productSlug);
+    if (!summary) return `<p>Produto não encontrado.</p>`;
+    return `
+      <button type="button" class="financeiro-back" data-view-back>Voltar</button>
+      <h2 class="financeiro-view-title">${escapeHtml(summary.produto)}</h2>
+      <p>${categoryChip(summary.categoria)}</p>
+      <div class="financeiro-stats">
+        <div><span>Menor</span><strong>${money(summary.menor)}</strong></div>
+        <div><span>Maior</span><strong>${money(summary.maior)}</strong></div>
+        <div><span>Médio</span><strong>${money(summary.media)}</strong></div>
+        <div><span>Último</span><strong>${money(summary.ultimo)}</strong></div>
+      </div>
+      <section class="financeiro-chart-card">
+        <h3>Evolução do preço</h3>
+        <p>Preço pago em cada compra registrada.</p>
+        ${renderPriceChart(summary.historico)}
+      </section>
+      <h3 class="financeiro-section-title">Compras deste produto</h3>
+      <div class="financeiro-table-wrap">
+        <table>
+          <thead><tr><th>Data</th><th>Estabelecimento</th><th>Descrição</th><th>Qtd</th><th>Preço</th><th>Referência</th><th>Nota</th></tr></thead>
+          <tbody>
+            ${summary.historico.map((item) => row([
+              { label: "Data", value: formatDate(item.data) },
+              { label: "Estabelecimento", value: escapeHtml(item.estabelecimento || "") },
+              { label: "Descrição", value: escapeHtml(item.descricao_original || "") },
+              { label: "Qtd", value: `${formatNumber(item.quantidade)} ${escapeHtml(item.unidade || "")}` },
+              { label: "Preço", value: `<span class="financeiro-price">${money(item.preco_total)}</span>` },
+              { label: "Referência", value: escapeHtml(bestReference(item)) },
+              { label: "Nota", value: escapeHtml(item.nota_id || "") }
+            ], item.categoria || item.categoria_nota)).join("")}
+          </tbody>
+        </table>
       </div>
     `;
   }
@@ -301,20 +415,24 @@
     const output = root.querySelector("[data-financeiro-output]");
     if (!output || !state.data) return;
     root.querySelectorAll("[data-view]").forEach((button) => {
-      button.classList.toggle("is-active", button.dataset.view === state.view);
+      const active = button.dataset.view === state.view || (state.view === "produto" && button.dataset.view === "produtos");
+      button.classList.toggle("is-active", active);
     });
     const renderers = {
-      compras: renderCompras,
+      mercado: () => renderItems("Mercado", "Nenhum item de mercado encontrado."),
+      farmacia: () => renderItems("Farmácia", "Nenhum item de farmácia encontrado."),
+      material: () => renderItems("Material", "Nenhum item de material encontrado."),
+      outros: () => renderItems("Outros", "Nenhum item encontrado."),
       produtos: renderProdutos,
-      mercados: renderMercados,
-      categorias: renderCategorias
+      estabelecimentos: renderEstabelecimentos,
+      produto: renderProductDetail
     };
-    output.innerHTML = renderers[state.view]();
+    output.innerHTML = (renderers[state.view] || renderers.mercado)();
   }
 
   function wirePrivateArea() {
-    fillSelect(root.querySelector("[data-market-filter]"), unique(state.data.items || [], "estabelecimento"), "Todos os mercados");
-    fillSelect(root.querySelector("[data-category-filter]"), unique(state.data.items || [], "categoria"), "Todas as categorias");
+    fillSelect(root.querySelector("[data-market-filter]"), unique(state.data.items || [], "estabelecimento"), "Todos os estabelecimentos");
+    fillSelect(root.querySelector("[data-category-filter]"), unique(state.data.items || [], "categoria"), "Todas as categorias", categoryLabel);
     root.querySelector("[data-search]").addEventListener("input", function (event) {
       state.search = event.target.value.trim();
       render();
@@ -330,8 +448,25 @@
     root.querySelectorAll("[data-view]").forEach((button) => {
       button.addEventListener("click", function () {
         state.view = button.dataset.view;
+        state.previousView = state.view;
+        state.productSlug = "";
         render();
       });
+    });
+    root.querySelector("[data-financeiro-output]").addEventListener("click", function (event) {
+      const product = event.target.closest("[data-product-slug]");
+      if (product) {
+        state.previousView = state.view === "produto" ? state.previousView : state.view;
+        state.view = "produto";
+        state.productSlug = product.dataset.productSlug;
+        render();
+        return;
+      }
+      if (event.target.closest("[data-view-back]")) {
+        state.view = state.previousView || "produtos";
+        state.productSlug = "";
+        render();
+      }
     });
     render();
   }
@@ -384,3 +519,4 @@
     }
   });
 })();
+

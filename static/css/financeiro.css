@@ -346,3 +346,176 @@
     text-transform: uppercase;
   }
 }
+
+.financeiro-view-title,
+.financeiro-section-title {
+  margin: 0 0 12px;
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+  font-size: clamp(1.45rem, 5vw, 2.2rem);
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+
+.financeiro-section-title {
+  margin-top: 18px;
+  font-size: 1.35rem;
+}
+
+.financeiro-chip-mercado {
+  border-color: rgba(15, 143, 131, 0.35);
+  background: rgba(15, 143, 131, 0.13);
+  color: #087065;
+}
+
+.financeiro-chip-farmacia {
+  border-color: rgba(37, 99, 235, 0.32);
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+}
+
+.financeiro-chip-material {
+  border-color: rgba(217, 119, 6, 0.35);
+  background: rgba(217, 119, 6, 0.14);
+  color: #9a3412;
+}
+
+.financeiro-chip-outros {
+  border-color: rgba(124, 58, 237, 0.32);
+  background: rgba(124, 58, 237, 0.12);
+  color: #6d28d9;
+}
+
+.financeiro-row-mercado {
+  --fin-row-color: #0f8f83;
+}
+
+.financeiro-row-farmacia {
+  --fin-row-color: #2563eb;
+}
+
+.financeiro-row-material {
+  --fin-row-color: #d97706;
+}
+
+.financeiro-row-outros {
+  --fin-row-color: #7c3aed;
+}
+
+.financeiro-product-button {
+  display: inline;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--fin-accent-strong);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  text-decoration: none;
+}
+
+.financeiro-product-button:hover {
+  text-decoration: underline;
+}
+
+.financeiro-back {
+  min-height: 38px;
+  margin-bottom: 14px;
+  padding: 0 14px;
+  border: 1px solid var(--fin-line);
+  border-radius: 999px;
+  background: rgba(255, 250, 243, 0.9);
+  color: var(--fin-accent-strong);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.financeiro-chart-card {
+  margin: 14px 0 16px;
+  padding: 14px;
+  border: 1px solid var(--fin-line);
+  border-radius: var(--radius-lg);
+  background: var(--fin-surface);
+  box-shadow: 0 14px 36px rgba(72, 45, 28, 0.08);
+}
+
+.financeiro-chart-card h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.financeiro-chart-card p {
+  margin: 4px 0 10px;
+  color: var(--fin-muted);
+}
+
+.financeiro-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 220px;
+}
+
+.financeiro-chart-grid {
+  stroke: rgba(126, 108, 91, 0.18);
+  stroke-width: 1;
+}
+
+.financeiro-chart-axis {
+  stroke: rgba(126, 108, 91, 0.42);
+  stroke-width: 1.2;
+}
+
+.financeiro-chart-line {
+  fill: none;
+  stroke: var(--fin-accent-strong);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.financeiro-chart-area {
+  fill: rgba(184, 92, 56, 0.1);
+}
+
+.financeiro-chart-point {
+  fill: #fffaf3;
+  stroke: var(--fin-accent-strong);
+  stroke-width: 3;
+}
+
+.financeiro-chart-label {
+  fill: var(--fin-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.financeiro-empty {
+  padding: 24px;
+  color: var(--fin-muted);
+  text-align: center;
+}
+
+.financeiro-card-mercado {
+  border-top: 5px solid #0f8f83;
+}
+
+.financeiro-card-farmacia {
+  border-top: 5px solid #2563eb;
+}
+
+.financeiro-card-material {
+  border-top: 5px solid #d97706;
+}
+
+.financeiro-card-outros {
+  border-top: 5px solid #7c3aed;
+}
+
+@media (max-width: 760px) {
+  .financeiro-table-wrap tr {
+    border-left-color: var(--fin-row-color, var(--fin-accent));
+  }
+}
+

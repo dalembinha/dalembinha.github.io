@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Financeiro | Dalembinha's Site</title>
-  <meta name="description" content="Área protegida Financeiro Digite a senha para descriptografar os dados no seu navegador. Senha Entrar Todos os mercados Todas as categorias Compras Produtos Mercados Categorias">
+  <meta name="description" content="Área protegida Financeiro Digite a senha para descriptografar os dados no seu navegador. Senha Entrar Todos os estabelecimentos Todas as categorias Mercado Farmácia Material Outros Produtos Estabelecimentos">
   <link rel="stylesheet" href="/static/css/main.css">
   <link rel="stylesheet" href="/static/css/financeiro.css">
 </head>
@@ -30,11 +30,11 @@ page-generic">
   <section class="page-shell">
     <header class="hero">
       <h1>Financeiro</h1>
-      <p class="hero-copy">Consulta privada de compras, mercados e histórico de preços.</p>
+      <p class="hero-copy">Consulta privada de compras, estabelecimentos e histórico de preços.</p>
     </header>
 
     <section class="content-card prose">
-      <div id="financeiro-app" class="financeiro-app" data-vault-url="https://dalembinha.github.io/static/financeiro/vault.json?v=20260703-1147">
+      <div id="financeiro-app" class="financeiro-app" data-vault-url="https://dalembinha.github.io/static/financeiro/vault.json?v=20260704-1737">
   <section class="financeiro-lock" data-lock-screen>
     <div>
       <p class="financeiro-eyebrow">Área protegida</p>
@@ -53,21 +53,23 @@ page-generic">
 
   <section class="financeiro-private" data-private-area hidden>
     <div class="financeiro-toolbar">
-      <input type="search" data-search placeholder="Buscar produto, mercado ou categoria">
-      <select data-market-filter><option value="">Todos os mercados</option></select>
+      <input type="search" data-search placeholder="Buscar produto, estabelecimento ou categoria">
+      <select data-market-filter><option value="">Todos os estabelecimentos</option></select>
       <select data-category-filter><option value="">Todas as categorias</option></select>
     </div>
     <div class="financeiro-tabs" role="tablist" aria-label="Financeiro">
-      <button type="button" data-view="compras" class="is-active">Compras</button>
+      <button type="button" data-view="mercado" class="is-active">Mercado</button>
+      <button type="button" data-view="farmacia">Farmácia</button>
+      <button type="button" data-view="material">Material</button>
+      <button type="button" data-view="outros">Outros</button>
       <button type="button" data-view="produtos">Produtos</button>
-      <button type="button" data-view="mercados">Mercados</button>
-      <button type="button" data-view="categorias">Categorias</button>
+      <button type="button" data-view="estabelecimentos">Estabelecimentos</button>
     </div>
     <div data-financeiro-output></div>
   </section>
 </div>
 
-<script src="../static/js/financeiro.js?v=20260703-1147" defer></script>
+<script src="../static/js/financeiro.js?v=20260704-1737" defer></script>
     </section>
   </section>
 </article>
