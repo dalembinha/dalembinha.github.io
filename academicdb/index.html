@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AcademicDB | Dalembinha's Site</title>
+  <meta name="description" content="Area protegida AcademicDB Digite a mesma senha do financeiro para descriptografar o catalogo academico no seu navegador. Senha Entrar Catalogo descriptografado AcademicDB">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/academicdb.css">
+</head>
+<body data-page-type="academicdb" data-page-slug="academicdb">
+  <div class="site-bg"></div>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="brand-mark">Dalembinha's Site</span>
+      <span class="brand-tag">Canções à mesa, receitas no coração.</span>
+    </a>
+    <nav class="site-nav" aria-label="Principal">
+      <a href="/"><span>Home</span></a>
+      <a href="/musicas/"><span>Músicas</span></a>
+      <a href="/receitas/"><span>Receitas</span></a>
+      <a href="/financeiro/" class="nav-financeiro"><span class="nav-icon nav-icon-financeiro" aria-hidden="true">R$</span><span>Financeiro</span></a>
+      <a href="/academicdb/" class="nav-academicdb"><span class="nav-icon nav-icon-academicdb" aria-hidden="true">DB</span><span>AcademicDB</span></a>
+    </nav>
+  </header>
+
+  <main class="site-main">
+<article class="
+page-generic">
+  <section class="page-shell">
+    <header class="hero">
+      <h1>AcademicDB</h1>
+      <p class="hero-copy">Catalogo academico protegido, gerado a partir dos sources em YAML.</p>
+    </header>
+
+    <section class="content-card prose">
+      <div id="academicdb-app" class="academicdb-app" data-vault-url="../static/academicdb/vault.json?v=20260704-1111">
+  <section class="academicdb-lock" data-lock-screen>
+    <div>
+      <p class="academicdb-eyebrow">Area protegida</p>
+      <h2>AcademicDB</h2>
+      <p>Digite a mesma senha do financeiro para descriptografar o catalogo academico no seu navegador.</p>
+    </div>
+    <form class="academicdb-login" data-login-form>
+      <label>
+        <span>Senha</span>
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">Entrar</button>
+      <p class="academicdb-status" data-login-status></p>
+    </form>
+  </section>
+
+  <section class="academicdb-private" data-private-area hidden>
+    <div class="academicdb-shell-header">
+      <div>
+        <p class="academicdb-eyebrow">Catalogo descriptografado</p>
+        <h2>AcademicDB</h2>
+      </div>
+      <p data-academicdb-summary></p>
+    </div>
+    <iframe data-academicdb-frame title="AcademicDB protegido" loading="lazy"></iframe>
+  </section>
+</div>
+
+<script src="../static/js/academicdb.js?v=20260704-1111" defer></script>
+    </section>
+  </section>
+</article>
+  </main>
+  <script src="/static/js/site.js"></script>
+</body>
+</html>
