@@ -519,3 +519,67 @@
   }
 }
 
+/* Financeiro category tab colors */
+.financeiro-tabs button[data-view="mercado"] {
+  --fin-tab-color: #0f8f83;
+  --fin-tab-soft: rgba(15, 143, 131, 0.13);
+  --fin-tab-border: rgba(15, 143, 131, 0.35);
+  --fin-tab-ink: #087065;
+}
+
+.financeiro-tabs button[data-view="farmacia"] {
+  --fin-tab-color: #2563eb;
+  --fin-tab-soft: rgba(37, 99, 235, 0.12);
+  --fin-tab-border: rgba(37, 99, 235, 0.32);
+  --fin-tab-ink: #1d4ed8;
+}
+
+.financeiro-tabs button[data-view="material"] {
+  --fin-tab-color: #d97706;
+  --fin-tab-soft: rgba(217, 119, 6, 0.14);
+  --fin-tab-border: rgba(217, 119, 6, 0.35);
+  --fin-tab-ink: #9a3412;
+}
+
+.financeiro-tabs button[data-view="outros"] {
+  --fin-tab-color: #7c3aed;
+  --fin-tab-soft: rgba(124, 58, 237, 0.12);
+  --fin-tab-border: rgba(124, 58, 237, 0.32);
+  --fin-tab-ink: #6d28d9;
+}
+
+.financeiro-tabs button[data-view="produtos"] {
+  --fin-tab-color: var(--fin-accent-strong);
+  --fin-tab-soft: rgba(184, 92, 56, 0.13);
+  --fin-tab-border: rgba(184, 92, 56, 0.25);
+  --fin-tab-ink: var(--fin-accent-strong);
+}
+
+.financeiro-tabs button[data-view="estabelecimentos"] {
+  --fin-tab-color: #52674f;
+  --fin-tab-soft: rgba(102, 122, 100, 0.14);
+  --fin-tab-border: rgba(102, 122, 100, 0.28);
+  --fin-tab-ink: #52674f;
+}
+
+.financeiro-tabs button[data-view] {
+  border-color: var(--fin-tab-border, var(--fin-line));
+  background: var(--fin-tab-soft, rgba(255, 250, 243, 0.86));
+  color: var(--fin-tab-ink, var(--fin-ink));
+}
+
+.financeiro-tabs button[data-view].is-active {
+  border-color: transparent;
+  background: var(--fin-tab-color, var(--fin-accent-strong));
+  color: #fffaf3;
+}
+
+.financeiro-tabs button[data-view]:hover {
+  border-color: var(--fin-tab-color, var(--fin-accent-strong));
+  color: var(--fin-tab-ink, var(--fin-accent-strong));
+}
+
+.financeiro-tabs button[data-view].is-active:hover {
+  color: #fffaf3;
+}
+/* End Financeiro category tab colors */
