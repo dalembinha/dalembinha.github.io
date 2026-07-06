@@ -100,6 +100,13 @@
       if (asset) element.setAttribute("src", blobUrl(asset));
     });
 
+    doc.querySelectorAll("link[href]").forEach((element) => {
+      const original = element.getAttribute("href");
+      const path = normalizeAssetPath(original);
+      const asset = path ? assets.get(path) : null;
+      if (asset) element.setAttribute("href", blobUrl(asset));
+    });
+
     doc.querySelectorAll("a[href]").forEach((anchor) => {
       const original = anchor.getAttribute("href") || "";
       const path = normalizeAssetPath(original);
