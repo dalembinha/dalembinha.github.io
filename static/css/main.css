@@ -762,6 +762,11 @@ a:hover {
   color: var(--chord-outside);
 }
 
+.page-tab.is-analysis-visible .tab-sheet {
+  margin-top: -0.72em;
+  padding-top: 0.72em;
+}
+
 .page-tab.is-analysis-visible .chord::after {
   content: attr(data-harmonic-degree);
   display: inline-block;
