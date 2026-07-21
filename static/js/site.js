@@ -193,6 +193,24 @@
     return scaleIntervals[analysisMode].map((interval) => (analysisRoot + interval) % 12);
   }
 
+  function isChordDiatonic(chordText) {
+    const scale = new Set(currentScale());
+    const pitches = chordPitchClasses(chordText);
+    return pitches.length > 0 && pitches.every((pitch) => scale.has(pitch));
+  }
+
+  function harmonicChordMarkup(chordText, isScaleChord) {
+    const colorClass = isChordDiatonic(chordText) ? "is-diatonic" : "is-outside";
+    const weightClass = isScaleChord ? " is-scale-chord" : "";
+    return '<span class="harmonic-table-chord ' + colorClass + weightClass + '">' + chordText + "</span>";
+  }
+
+  function harmonicProgressionMarkup(firstChord, secondChord) {
+    return harmonicChordMarkup(firstChord, false) +
+      '<span class="harmonic-progression-separator"> – </span>' +
+      harmonicChordMarkup(secondChord, false);
+  }
+
   function chordDegree(chordText) {
     const rootMatch = chordText.match(baseChordRegex);
     if (!rootMatch) {
@@ -231,10 +249,8 @@
   }
 
   function classifyChords() {
-    const scale = new Set(currentScale());
     chords.forEach(function (chord) {
-      const pitches = chordPitchClasses(chord.textContent);
-      const isDiatonic = pitches.length > 0 && pitches.every((pitch) => scale.has(pitch));
+      const isDiatonic = isChordDiatonic(chord.textContent);
       const degree = chordDegree(chord.textContent);
       chord.classList.toggle("is-diatonic", isDiatonic);
       chord.classList.toggle("is-outside", !isDiatonic);
@@ -259,16 +275,24 @@
       harmonicTableBody.innerHTML = scale.map(function (target, index) {
         const dominant = target + 7;
         const substitute = target + 1;
+        const dominantTwo = target + 2;
         const substituteTwo = substitute + 7;
         const diminished = target - 1;
+        const scaleChord = pitchName(target) + scaleChordSuffixes[analysisMode][index];
+        const dominantChord = pitchName(dominant) + "7";
+        const substituteChord = flatNotes[(substitute + 12) % 12] + "7";
+        const dominantTwoChord = pitchName(dominantTwo) + "m7";
+        const substituteTwoChord = flatNotes[(substituteTwo + 12) % 12] + "m7";
+        const diminishedChord = pitchName(diminished) + "°7";
         return "<tr>" +
           "<td>" + degreeLabels[analysisMode][index] + "</td>" +
           "<td>" + pitchName(target) + "</td>" +
-          "<td>" + pitchName(target) + scaleChordSuffixes[analysisMode][index] + "</td>" +
-          "<td>" + pitchName(dominant) + "7</td>" +
-          "<td>" + pitchName(substitute) + "7</td>" +
-          "<td>" + pitchName(substituteTwo) + "m7</td>" +
-          "<td>" + pitchName(diminished) + "°7</td>" +
+          "<td>" + harmonicChordMarkup(scaleChord, true) + "</td>" +
+          "<td>" + harmonicChordMarkup(dominantChord, false) + "</td>" +
+          "<td>" + harmonicChordMarkup(substituteChord, false) + "</td>" +
+          "<td>" + harmonicProgressionMarkup(dominantTwoChord, dominantChord) + "</td>" +
+          "<td>" + harmonicProgressionMarkup(substituteTwoChord, substituteChord) + "</td>" +
+          "<td>" + harmonicChordMarkup(diminishedChord, false) + "</td>" +
           "</tr>";
       }).join("");
     }
