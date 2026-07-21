@@ -60,6 +60,9 @@
     major: ["7M", "m7", "m7", "7M", "7", "m7", "m7(b5)"],
     minor: ["m7", "m7(b5)", "7M", "m7", "m7", "7M", "7"]
   };
+  const chromaticDegreeLabels = [
+    "I", "bII", "II", "bIII", "III", "IV", "#IV", "V", "bVI", "VI", "bVII", "VII"
+  ];
   const baseChordRegex = /^([A-G](?:#|b)?)/;
   const originalChords = chords.map((chord) => chord.textContent);
   const keyLabel = document.querySelector("[data-current-key]");
@@ -131,6 +134,10 @@
     });
   }
 
+  function hasMajorSeventh(suffix) {
+    return /(7M|M7|7\+)/.test(suffix) || /maj7/i.test(suffix);
+  }
+
   function chordPitchClasses(chordText) {
     const rootMatch = chordText.match(baseChordRegex);
     if (!rootMatch) {
@@ -160,7 +167,7 @@
 
     if (/(dim7|º7|°7)/i.test(suffix)) {
       intervals.push(9);
-    } else if (/(7M|M7|maj7|7\+)/i.test(suffix)) {
+    } else if (hasMajorSeventh(suffix)) {
       intervals.push(11);
     } else if (/7/.test(suffix) && !/7\/4/.test(suffix)) {
       intervals.push(10);
@@ -186,14 +193,53 @@
     return scaleIntervals[analysisMode].map((interval) => (analysisRoot + interval) % 12);
   }
 
+  function chordDegree(chordText) {
+    const rootMatch = chordText.match(baseChordRegex);
+    if (!rootMatch) {
+      return "—";
+    }
+    const root = notePitch[rootMatch[1]];
+    const suffix = chordText.slice(rootMatch[0].length);
+    const lowered = suffix.toLowerCase();
+    const interval = (root - analysisRoot + 12) % 12;
+    let degree = chromaticDegreeLabels[interval];
+    const isHalfDiminished = /m7(?:\(b5\)|\/5-)/i.test(suffix);
+    const isDiminished = isHalfDiminished || /(dim|º|°)/i.test(suffix);
+    const isMinor = !isDiminished && /^m(?!aj)/.test(lowered);
+
+    if (isMinor || isDiminished) {
+      degree = degree.replace(/[IV]+/, function (roman) {
+        return roman.toLowerCase();
+      });
+    }
+    if (isHalfDiminished) {
+      return degree + "ø7";
+    }
+    if (isDiminished) {
+      return degree + (/(dim7|º7|°7)/i.test(suffix) ? "°7" : "°");
+    }
+    if (hasMajorSeventh(suffix)) {
+      return degree + "7M";
+    }
+    if (/7/.test(suffix)) {
+      return degree + "7";
+    }
+    if (/(^|[^0-9])6([^0-9]|$)/.test(suffix)) {
+      return degree + "6";
+    }
+    return degree;
+  }
+
   function classifyChords() {
     const scale = new Set(currentScale());
     chords.forEach(function (chord) {
       const pitches = chordPitchClasses(chord.textContent);
       const isDiatonic = pitches.length > 0 && pitches.every((pitch) => scale.has(pitch));
+      const degree = chordDegree(chord.textContent);
       chord.classList.toggle("is-diatonic", isDiatonic);
       chord.classList.toggle("is-outside", !isDiatonic);
-      chord.title = isDiatonic ? "Acorde pertencente à escala" : "Acorde fora da escala";
+      chord.dataset.harmonicDegree = degree;
+      chord.title = "Grau " + degree + " · " + (isDiatonic ? "acorde pertencente à escala" : "acorde fora da escala");
     });
   }
 

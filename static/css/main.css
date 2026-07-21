@@ -603,7 +603,7 @@ a:hover {
 }
 
 .harmonic-analysis {
-  margin: 0 0 24px;
+  margin: 24px 0 0;
   padding: 24px;
   background: rgba(255, 251, 246, 0.94);
   border: 1px solid rgba(184, 92, 56, 0.2);
@@ -738,6 +738,22 @@ a:hover {
 
 .page-tab.is-analysis-visible .chord.is-outside {
   color: var(--chord-outside);
+}
+
+.page-tab.is-analysis-visible .chord::after {
+  content: attr(data-harmonic-degree);
+  display: inline-block;
+  margin-left: 0.24em;
+  padding: 0.05em 0.34em;
+  color: inherit;
+  background: rgba(72, 45, 28, 0.07);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-family: system-ui, sans-serif;
+  font-size: 0.62em;
+  font-weight: 800;
+  line-height: 1.15;
+  vertical-align: 0.42em;
 }
 
 .site-footer {
