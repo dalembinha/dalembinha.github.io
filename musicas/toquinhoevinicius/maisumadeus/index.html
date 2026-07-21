@@ -26,15 +26,13 @@
   <main class="site-main">
 <article class="
 page-tab
-">
+" data-harmonic-key="E" data-harmonic-mode="minor" data-harmonic-key-source="inferred">
   <section class="tab-shell">
     <div class="tab-toolbar">
       <a class="ghost-link" href="/musicas/">Voltar para músicas</a>
       <div class="tab-toolbar-controls">
         <div class="toolbar-group">
-          <button type="button" class="toolbar-button" data-chord-color="blue">Azul</button>
-          <button type="button" class="toolbar-button" data-chord-color="terracotta">Terra</button>
-          <button type="button" class="toolbar-button" data-chord-color="olive">Verde</button>
+          <button type="button" class="toolbar-button analysis-toggle" data-harmonic-toggle aria-expanded="false" aria-controls="harmonic-analysis">Análise harmônica</button>
         </div>
         <div class="toolbar-group">
           <button type="button" class="toolbar-button" data-font-step="-1">A-</button>
@@ -61,6 +59,39 @@ page-tab
         <a href="https://www.cifraclub.com.br/toquinho-vinicius/" target="_blank" rel="noopener">Toquinho & Vinicius</a>
       </p>
     </header>
+
+    <section class="harmonic-analysis" id="harmonic-analysis" data-harmonic-panel hidden>
+      <div class="harmonic-analysis-head">
+        <div>
+          <p class="eyebrow">Mapa harmônico</p>
+          <h2>Análise da tonalidade</h2>
+          <p class="harmonic-note" data-harmonic-summary></p>
+        </div>
+        <div class="harmonic-controls" aria-label="Ajustar tonalidade da análise">
+          <label>Tom <select data-analysis-key></select></label>
+          <label>Modo
+            <select data-analysis-mode>
+              <option value="major">Maior</option>
+              <option value="minor">Menor</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="harmonic-legend" aria-label="Legenda das cifras">
+        <span><i class="legend-swatch is-diatonic"></i> Acorde pertencente à escala</span>
+        <span><i class="legend-swatch is-outside"></i> Acorde fora da escala</span>
+      </div>
+      <div class="scale-notes" data-scale-notes></div>
+      <div class="harmonic-table-wrap">
+        <table class="harmonic-table">
+          <thead>
+            <tr><th>Grau</th><th>Nota</th><th>Acorde da escala</th><th>V7</th><th>SubV7</th><th>II do SubV7</th><th>Diminuto</th></tr>
+          </thead>
+          <tbody data-harmonic-table></tbody>
+        </table>
+      </div>
+      <p class="harmonic-footnote">V7, SubV7, II do SubV7 e diminuto são calculados como caminhos de resolução para cada nota da escala.</p>
+    </section>
 
     <section class="tab-card prose">
       <div class="tab-layout columns">

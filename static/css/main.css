@@ -11,6 +11,8 @@
   --accent-strong: #8f3f20;
   --accent-olive: #667a64;
   --chord-color: #1f5fbf;
+  --chord-diatonic: #28724f;
+  --chord-outside: #b64f3c;
   --shadow: 0 24px 60px rgba(72, 45, 28, 0.12);
   --radius-xl: 28px;
   --radius-lg: 22px;
@@ -600,6 +602,144 @@ a:hover {
   font-weight: 700;
 }
 
+.harmonic-analysis {
+  margin: 0 0 24px;
+  padding: 24px;
+  background: rgba(255, 251, 246, 0.94);
+  border: 1px solid rgba(184, 92, 56, 0.2);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 18px 46px rgba(72, 45, 28, 0.1);
+}
+
+.harmonic-analysis[hidden] {
+  display: none;
+}
+
+.harmonic-analysis-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.harmonic-analysis h2 {
+  margin: 2px 0 6px;
+  font-size: clamp(1.45rem, 2.5vw, 2rem);
+}
+
+.harmonic-note,
+.harmonic-footnote {
+  margin: 0;
+  color: var(--muted);
+}
+
+.harmonic-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.harmonic-controls label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.harmonic-controls select {
+  min-width: 100px;
+  padding: 8px 28px 8px 10px;
+  color: var(--ink);
+  background: #fffaf4;
+  border: 1px solid rgba(72, 45, 28, 0.18);
+  border-radius: 10px;
+  font: inherit;
+}
+
+.harmonic-legend,
+.scale-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-top: 18px;
+}
+
+.harmonic-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.legend-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.legend-swatch.is-diatonic {
+  background: var(--chord-diatonic);
+}
+
+.legend-swatch.is-outside {
+  background: var(--chord-outside);
+}
+
+.scale-note {
+  padding: 5px 9px;
+  color: var(--accent-strong);
+  background: rgba(184, 92, 56, 0.1);
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.harmonic-table-wrap {
+  margin-top: 18px;
+  overflow-x: auto;
+}
+
+.harmonic-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.harmonic-table th,
+.harmonic-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(72, 45, 28, 0.1);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.harmonic-table th {
+  color: var(--muted);
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.harmonic-table td:first-child,
+.harmonic-table td:nth-child(3) {
+  font-weight: 700;
+}
+
+.harmonic-footnote {
+  margin-top: 14px;
+  font-size: 0.84rem;
+}
+
+.page-tab.is-analysis-visible .chord.is-diatonic {
+  color: var(--chord-diatonic);
+}
+
+.page-tab.is-analysis-visible .chord.is-outside {
+  color: var(--chord-outside);
+}
+
 .site-footer {
   max-width: var(--content-width);
   margin: 0 auto;
@@ -621,6 +761,10 @@ a:hover {
   .hero-tab-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .harmonic-analysis-head {
+    flex-direction: column;
   }
 
   .recipe-layout {
