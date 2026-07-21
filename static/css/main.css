@@ -598,6 +598,7 @@ a:hover {
 }
 
 .chord {
+  position: relative;
   color: var(--chord-color);
   font-weight: 700;
 }
@@ -726,20 +727,21 @@ a:hover {
   font-weight: 700;
 }
 
-.harmonic-table-chord {
+.harmonic-table .harmonic-table-chord {
+  display: inline-block;
   font-weight: 400;
 }
 
-.harmonic-table-chord.is-diatonic {
-  color: var(--chord-diatonic);
+.harmonic-table .harmonic-table-chord.is-diatonic {
+  color: var(--chord-diatonic) !important;
 }
 
-.harmonic-table-chord.is-outside {
-  color: var(--chord-outside);
+.harmonic-table .harmonic-table-chord.is-outside {
+  color: var(--chord-outside) !important;
 }
 
-.harmonic-table-chord.is-scale-chord {
-  font-weight: 800;
+.harmonic-table .harmonic-table-chord.is-scale-chord {
+  font-weight: 800 !important;
 }
 
 .harmonic-progression-separator {
@@ -763,7 +765,10 @@ a:hover {
 .page-tab.is-analysis-visible .chord::after {
   content: attr(data-harmonic-degree);
   display: inline-block;
-  margin-left: 0.24em;
+  position: absolute;
+  z-index: 2;
+  top: -0.42em;
+  left: calc(100% + 0.24em);
   padding: 0.05em 0.34em;
   color: inherit;
   background: rgba(72, 45, 28, 0.07);
@@ -773,6 +778,16 @@ a:hover {
   font-size: 0.62em;
   font-weight: 800;
   line-height: 1.15;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.page-tab.is-analysis-visible .chord.degree-needs-space::after {
+  position: relative;
+  top: auto;
+  left: auto;
+  z-index: auto;
+  margin-left: 0.24em;
   vertical-align: 0.42em;
 }
 

@@ -259,6 +259,67 @@
     });
   }
 
+  let degreeSpacingFrame = 0;
+
+  function measureDegreeBadge(chord) {
+    const degree = chord.dataset.harmonicDegree || "";
+    const style = getComputedStyle(chord, "::after");
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return degree.length * 8 + 12;
+    }
+    context.font = [style.fontStyle, style.fontWeight, style.fontSize, style.fontFamily]
+      .filter(Boolean)
+      .join(" ");
+    const horizontalExtras = [
+      style.paddingLeft,
+      style.paddingRight,
+      style.borderLeftWidth,
+      style.borderRightWidth
+    ].reduce(function (total, value) {
+      return total + (parseFloat(value) || 0);
+    }, 0);
+    return context.measureText(degree).width + horizontalExtras + 4;
+  }
+
+  function updateDegreeSpacing() {
+    degreeSpacingFrame = 0;
+    chords.forEach(function (chord) {
+      chord.classList.remove("degree-needs-space");
+    });
+    if (!tabPage?.classList.contains("is-analysis-visible")) {
+      return;
+    }
+
+    chords.forEach(function (chord, index) {
+      const nextChord = chords[index + 1];
+      if (!nextChord || chord.closest(".tab-sheet") !== nextChord.closest(".tab-sheet")) {
+        return;
+      }
+      const chordRect = chord.getBoundingClientRect();
+      const nextRect = nextChord.getBoundingClientRect();
+      const sameLine = Math.abs(chordRect.top - nextRect.top) < Math.max(chordRect.height, 1) * 0.55;
+      if (!sameLine) {
+        return;
+      }
+      const availableGap = nextRect.left - chordRect.right;
+      if (availableGap < measureDegreeBadge(chord)) {
+        chord.classList.add("degree-needs-space");
+      }
+    });
+  }
+
+  function scheduleDegreeSpacing() {
+    if (typeof window === "undefined" || typeof window.requestAnimationFrame !== "function") {
+      return;
+    }
+    if (degreeSpacingFrame) {
+      window.cancelAnimationFrame(degreeSpacingFrame);
+    }
+    degreeSpacingFrame = window.requestAnimationFrame(updateDegreeSpacing);
+  }
+
   function renderAnalysis() {
     const scale = currentScale();
     const modeName = analysisMode === "minor" ? "menor natural" : "maior";
@@ -276,13 +337,11 @@
         const dominant = target + 7;
         const substitute = target + 1;
         const dominantTwo = target + 2;
-        const substituteTwo = substitute + 7;
         const diminished = target - 1;
         const scaleChord = pitchName(target) + scaleChordSuffixes[analysisMode][index];
         const dominantChord = pitchName(dominant) + "7";
         const substituteChord = flatNotes[(substitute + 12) % 12] + "7";
         const dominantTwoChord = pitchName(dominantTwo) + "m7";
-        const substituteTwoChord = flatNotes[(substituteTwo + 12) % 12] + "m7";
         const diminishedChord = pitchName(diminished) + "°7";
         return "<tr>" +
           "<td>" + degreeLabels[analysisMode][index] + "</td>" +
@@ -291,7 +350,7 @@
           "<td>" + harmonicChordMarkup(dominantChord, false) + "</td>" +
           "<td>" + harmonicChordMarkup(substituteChord, false) + "</td>" +
           "<td>" + harmonicProgressionMarkup(dominantTwoChord, dominantChord) + "</td>" +
-          "<td>" + harmonicProgressionMarkup(substituteTwoChord, substituteChord) + "</td>" +
+          "<td>" + harmonicProgressionMarkup(dominantTwoChord, substituteChord) + "</td>" +
           "<td>" + harmonicChordMarkup(diminishedChord, false) + "</td>" +
           "</tr>";
       }).join("");
@@ -300,6 +359,7 @@
     if (analysisModeSelect) analysisModeSelect.value = analysisMode;
     updateToneLabel();
     classifyChords();
+    scheduleDegreeSpacing();
   }
 
   analysisToggle?.addEventListener("click", function () {
@@ -309,6 +369,7 @@
     analysisToggle.classList.toggle("is-active", willOpen);
     tabPage?.classList.toggle("is-analysis-visible", willOpen);
     if (willOpen) renderAnalysis();
+    else scheduleDegreeSpacing();
   });
 
   analysisKeySelect?.addEventListener("change", function () {
@@ -340,8 +401,13 @@
       const nextSize = fontSize + Number(button.dataset.fontStep);
       fontSize = Math.min(28, Math.max(12, nextSize));
       updateFontSize();
+      scheduleDegreeSpacing();
     });
   });
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("resize", scheduleDegreeSpacing);
+  }
 
   fillKeySelect();
   renderAnalysis();
