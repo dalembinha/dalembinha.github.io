@@ -73,6 +73,9 @@
   const analysisSummary = document.querySelector("[data-harmonic-summary]");
   const scaleNotesContainer = document.querySelector("[data-scale-notes]");
   const harmonicTableBody = document.querySelector("[data-harmonic-table]");
+  const chordDiagramsContainer = document.querySelector("[data-chord-diagrams]");
+  const guitarTuning = [4, 9, 2, 7, 11, 4];
+  const guitarStringNames = ["E grave", "A", "D", "G", "B", "E agudo"];
 
   const declaredKey = tabPage?.dataset.harmonicKey || originalChords[0]?.match(baseChordRegex)?.[1] || "C";
   let analysisRoot = notePitch[declaredKey] ?? 0;
@@ -187,6 +190,170 @@
       intervals.push((notePitch[slashMatch[1]] - root + 12) % 12);
     }
     return Array.from(new Set(intervals.map((interval) => (root + interval) % 12)));
+  }
+
+  function chordBassPitch(chordText) {
+    const slashBass = chordText.match(/\/([A-G](?:#|b)?)(?:$|(?=\/))/);
+    if (slashBass && notePitch[slashBass[1]] !== undefined) {
+      return notePitch[slashBass[1]];
+    }
+    const root = chordText.match(baseChordRegex);
+    return root ? notePitch[root[1]] : null;
+  }
+
+  function evaluateGuitarVoicing(frets, targetPitches, rootPitch, bassPitch) {
+    const played = frets
+      .map(function (fret, stringIndex) {
+        return fret < 0 ? null : {
+          fret: fret,
+          stringIndex: stringIndex,
+          pitch: (guitarTuning[stringIndex] + fret) % 12
+        };
+      })
+      .filter(Boolean);
+    if (played.length < 3) {
+      return null;
+    }
+
+    const fretted = played.filter(function (item) { return item.fret > 0; });
+    const positiveFrets = fretted.map(function (item) { return item.fret; });
+    const minFret = positiveFrets.length ? Math.min.apply(null, positiveFrets) : 0;
+    const maxFret = positiveFrets.length ? Math.max.apply(null, positiveFrets) : 0;
+    if (maxFret - minFret > 3) {
+      return null;
+    }
+    if (played.some(function (item) { return item.fret === 0; }) && maxFret > 4) {
+      return null;
+    }
+
+    const covered = new Set(played.map(function (item) { return item.pitch; }));
+    const firstPlayed = played[0];
+    const firstString = firstPlayed.stringIndex;
+    const lastString = played[played.length - 1].stringIndex;
+    const interiorMutes = frets.slice(firstString, lastString + 1).filter(function (fret) {
+      return fret < 0;
+    }).length;
+    let score = covered.size * 26 + played.length * 4;
+    score -= (targetPitches.length - covered.size) * 18;
+    score += covered.has(rootPitch) ? 14 : -20;
+    score += firstPlayed.pitch === bassPitch ? 38 : -14;
+    score -= frets.filter(function (fret) { return fret < 0; }).length * 2;
+    score -= interiorMutes * 9;
+    score -= minFret * 0.7;
+    score -= positiveFrets.reduce(function (total, fret) { return total + fret; }, 0) * 0.08;
+    if (covered.size === targetPitches.length) score += 24;
+    if (played.some(function (item) { return item.fret === 0; })) score += 5;
+    return score;
+  }
+
+  function generateGuitarVoicing(chordText) {
+    const targetPitches = chordPitchClasses(chordText);
+    const rootMatch = chordText.match(baseChordRegex);
+    if (!targetPitches.length || !rootMatch) {
+      return [-1, -1, -1, -1, -1, -1];
+    }
+    const targetSet = new Set(targetPitches);
+    const rootPitch = notePitch[rootMatch[1]];
+    const bassPitch = chordBassPitch(chordText) ?? rootPitch;
+    let best = null;
+    const seen = new Set();
+
+    for (let baseFret = 1; baseFret <= 12; baseFret += 1) {
+      const optionsByString = guitarTuning.map(function (openPitch) {
+        const options = [-1];
+        if (targetSet.has(openPitch)) options.push(0);
+        for (let fret = baseFret; fret < baseFret + 4; fret += 1) {
+          if (targetSet.has((openPitch + fret) % 12)) options.push(fret);
+        }
+        return Array.from(new Set(options));
+      });
+      const frets = new Array(6).fill(-1);
+
+      function searchString(stringIndex) {
+        if (stringIndex === 6) {
+          const key = frets.join(",");
+          if (seen.has(key)) return;
+          seen.add(key);
+          const score = evaluateGuitarVoicing(frets, targetPitches, rootPitch, bassPitch);
+          if (score !== null && (!best || score > best.score)) {
+            best = { score: score, frets: frets.slice() };
+          }
+          return;
+        }
+        optionsByString[stringIndex].forEach(function (fret) {
+          frets[stringIndex] = fret;
+          searchString(stringIndex + 1);
+        });
+      }
+
+      searchString(0);
+    }
+    return best ? best.frets : [-1, -1, -1, -1, -1, -1];
+  }
+
+  function escapeMarkup(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;");
+  }
+
+  function guitarDiagramMarkup(chordText) {
+    const frets = generateGuitarVoicing(chordText);
+    const positiveFrets = frets.filter(function (fret) { return fret > 0; });
+    const minFret = positiveFrets.length ? Math.min.apply(null, positiveFrets) : 1;
+    const hasOpenString = frets.some(function (fret) { return fret === 0; });
+    const baseFret = hasOpenString || minFret <= 1 ? 1 : minFret;
+    const colorClass = isChordDiatonic(chordText) ? "is-diatonic" : "is-outside";
+    const escapedChord = escapeMarkup(chordText);
+    const openMarkers = frets.map(function (fret) {
+      return '<span aria-hidden="true">' + (fret < 0 ? "×" : fret === 0 ? "○" : "") + "</span>";
+    }).join("");
+    const strings = guitarTuning.map(function (_, index) {
+      return '<i class="guitar-string" style="--string-index:' + index + '" aria-hidden="true"></i>';
+    }).join("");
+    const fretLines = [0, 1, 2, 3, 4].map(function (index) {
+      return '<i class="guitar-fret' + (index === 0 ? " is-nut" : "") +
+        '" style="--fret-index:' + index + '" aria-hidden="true"></i>';
+    }).join("");
+    const dots = frets.map(function (fret, stringIndex) {
+      if (fret <= 0) return "";
+      const relativeFret = fret - baseFret + 1;
+      return '<i class="guitar-dot" style="--string-index:' + stringIndex +
+        ";--fret-index:" + relativeFret + '" aria-hidden="true"></i>';
+    }).join("");
+    const positionLabel = baseFret > 1
+      ? '<span class="guitar-position">' + baseFret + "ª</span>"
+      : "";
+    const description = frets.map(function (fret, index) {
+      const state = fret < 0 ? "não tocar" : fret === 0 ? "solta" : "casa " + fret;
+      return guitarStringNames[index] + ": " + state;
+    }).join("; ");
+
+    return '<figure class="guitar-chord-card" data-chord-name="' + escapedChord +
+      '" data-frets="' + frets.join(",") + '">' +
+      '<figcaption><span class="diagram-chord-name ' + colorClass + '">' + escapedChord + "</span>" +
+      '<span class="diagram-degree">' + escapeMarkup(chordDegree(chordText)) + "</span></figcaption>" +
+      '<div class="guitar-diagram" role="img" aria-label="' + escapedChord + ". " + escapeMarkup(description) + '">' +
+      '<div class="guitar-open-markers">' + openMarkers + "</div>" +
+      '<div class="guitar-neck' + (baseFret === 1 ? " is-first-position" : "") + '">' +
+      positionLabel + strings + fretLines + dots +
+      "</div></div></figure>";
+  }
+
+  function renderChordDiagrams() {
+    if (!chordDiagramsContainer) return;
+    const uniqueChords = [];
+    const seen = new Set();
+    chords.forEach(function (chord) {
+      const chordText = chord.textContent.trim();
+      if (chordText && !seen.has(chordText)) {
+        seen.add(chordText);
+        uniqueChords.push(chordText);
+      }
+    });
+    chordDiagramsContainer.innerHTML = uniqueChords.map(guitarDiagramMarkup).join("");
   }
 
   function currentScale() {
@@ -359,6 +526,9 @@
     if (analysisModeSelect) analysisModeSelect.value = analysisMode;
     updateToneLabel();
     classifyChords();
+    if (tabPage?.classList.contains("is-analysis-visible")) {
+      renderChordDiagrams();
+    }
     scheduleDegreeSpacing();
   }
 
