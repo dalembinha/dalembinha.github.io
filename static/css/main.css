@@ -711,7 +711,7 @@ a:hover {
 .staff-key-notation {
   position: relative;
   width: 168px;
-  height: 72px;
+  height: 88px;
   overflow: visible;
   flex: 0 0 auto;
 }
@@ -747,6 +747,8 @@ a:hover {
   font-family: "Apple Symbols", "Noto Music", "Bravura", serif;
   font-size: 68px;
   line-height: 1;
+  transform: scaleY(1.78);
+  transform-origin: 50% 0;
 }
 
 .key-signature-accidental {
