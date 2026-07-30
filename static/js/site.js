@@ -47,7 +47,10 @@
     C: 0, "C#": 1, Db: 1, D: 2, "D#": 3, Eb: 3, E: 4, F: 5,
     "F#": 6, Gb: 6, G: 7, "G#": 8, Ab: 8, A: 9, "A#": 10, Bb: 10, B: 11
   };
-  const flatKeyPitches = new Set([1, 3, 5, 8, 10]);
+  const flatKeyPitches = {
+    major: new Set([1, 3, 5, 8, 10]),
+    minor: new Set([0, 2, 3, 5, 7, 8, 10])
+  };
   const scaleIntervals = {
     major: [0, 2, 4, 5, 7, 9, 11],
     minor: [0, 2, 3, 5, 7, 8, 10]
@@ -83,7 +86,11 @@
   const declaredKey = tabPage?.dataset.harmonicKey || originalChords[0]?.match(baseChordRegex)?.[1] || "C";
   let analysisRoot = notePitch[declaredKey] ?? 0;
   let analysisMode = tabPage?.dataset.harmonicMode === "minor" ? "minor" : "major";
-  let preferFlats = declaredKey.includes("b") || flatKeyPitches.has(analysisRoot);
+  function shouldPreferFlats(pitch, mode) {
+    return flatKeyPitches[mode].has((pitch + 12) % 12);
+  }
+  let preferFlats = declaredKey.includes("b") ||
+    (!declaredKey.includes("#") && shouldPreferFlats(analysisRoot, analysisMode));
 
   function pitchName(pitch) {
     const names = preferFlats ? flatNotes : sharpNotes;
@@ -130,9 +137,13 @@
   }
 
   function keySignatureCount() {
-    const majorSignatures = [0, -5, 2, -3, 4, -1, 6, 1, -4, 3, -2, 5];
-    const minorSignatures = [-3, 4, -1, -6, 1, -4, 3, -2, -7, 0, -5, 2];
-    return (analysisMode === "minor" ? minorSignatures : majorSignatures)[analysisRoot];
+    const keyName = pitchName(analysisRoot);
+    const signatures = analysisMode === "minor"
+      ? { A: 0, E: 1, B: 2, "F#": 3, "C#": 4, "G#": 5, "D#": 6, "A#": 7,
+        D: -1, G: -2, C: -3, F: -4, Bb: -5, Eb: -6, Ab: -7 }
+      : { C: 0, G: 1, D: 2, A: 3, E: 4, B: 5, "F#": 6, "C#": 7,
+        F: -1, Bb: -2, Eb: -3, Ab: -4, Db: -5, Gb: -6, Cb: -7 };
+    return signatures[keyName] ?? 0;
   }
 
   function renderKeySignature() {
@@ -581,13 +592,14 @@
   analysisKeySelect?.addEventListener("change", function () {
     analysisRoot = Number(analysisKeySelect.value);
     toneOffset = analysisRoot - (notePitch[declaredKey] ?? 0);
-    preferFlats = flatKeyPitches.has(analysisRoot);
+    preferFlats = shouldPreferFlats(analysisRoot, analysisMode);
     updateChords();
     renderAnalysis();
   });
 
   analysisModeSelect?.addEventListener("change", function () {
     analysisMode = analysisModeSelect.value === "minor" ? "minor" : "major";
+    preferFlats = shouldPreferFlats(analysisRoot, analysisMode);
     renderAnalysis();
   });
 
@@ -595,7 +607,7 @@
     button.addEventListener("click", function () {
       toneOffset += Number(button.dataset.toneStep);
       analysisRoot = (analysisRoot + Number(button.dataset.toneStep) + 12) % 12;
-      preferFlats = flatKeyPitches.has(analysisRoot);
+      preferFlats = shouldPreferFlats(analysisRoot, analysisMode);
       updateChords();
       updateToneLabel();
       renderAnalysis();

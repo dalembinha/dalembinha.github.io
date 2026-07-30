@@ -552,9 +552,26 @@ a:hover {
   margin: 0;
 }
 
+.hero-tab-title {
+  min-width: 0;
+}
+
+.hero-tab-title .hero-meta {
+  margin: 12px 0 0;
+}
+
+.hero-tab-aside {
+  display: flex;
+  width: min(100%, 490px);
+  flex: 0 1 490px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
 .tab-suggest-link {
-  flex-shrink: 0;
-  margin-top: 4px;
+  align-self: flex-end;
+  max-width: 100%;
 }
 
 .toolbar-button.is-active {
@@ -669,18 +686,6 @@ a:hover {
   border-radius: 14px;
 }
 
-.hero-tab-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 22px;
-  margin-top: 14px;
-}
-
-.hero-tab-footer .hero-meta {
-  margin: 0;
-}
-
 .hero-key-notation {
   margin-top: 0;
   padding: 8px 14px;
@@ -711,7 +716,7 @@ a:hover {
 .staff-key-notation {
   position: relative;
   width: 168px;
-  height: 88px;
+  height: 72px;
   overflow: visible;
   flex: 0 0 auto;
 }
@@ -741,21 +746,19 @@ a:hover {
 .treble-clef {
   position: absolute;
   z-index: 2;
-  top: -8px;
-  left: 2px;
+  top: -5px;
+  left: -1px;
   color: var(--ink);
-  font-family: "Apple Symbols", "Noto Music", "Bravura", serif;
-  font-size: 68px;
+  font-family: "Bravura", "Noto Music", "Apple Symbols", serif;
+  font-size: 92px;
   line-height: 1;
-  transform: scaleY(1.78);
-  transform-origin: 50% 0;
 }
 
 .key-signature-accidental {
   position: absolute;
   z-index: 3;
   top: var(--accidental-top);
-  left: calc(54px + var(--accidental-index) * 14px);
+  left: calc(62px + var(--accidental-index) * 14px);
   color: var(--ink);
   font-family: "Apple Symbols", "Noto Music", "Bravura", serif;
   font-size: 25px;
@@ -1070,6 +1073,15 @@ a:hover {
     align-items: flex-start;
   }
 
+  .hero-tab-aside {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .tab-suggest-link {
+    align-self: flex-start;
+  }
+
   .harmonic-analysis-head {
     flex-direction: column;
   }
@@ -1077,11 +1089,6 @@ a:hover {
   .harmonic-key-notation {
     align-items: flex-start;
     flex-wrap: wrap;
-  }
-
-  .hero-tab-footer {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .chord-diagrams-head {
