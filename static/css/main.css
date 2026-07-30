@@ -669,6 +669,24 @@ a:hover {
   border-radius: 14px;
 }
 
+.hero-tab-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  margin-top: 14px;
+}
+
+.hero-tab-footer .hero-meta {
+  margin: 0;
+}
+
+.hero-key-notation {
+  margin-top: 0;
+  padding: 8px 14px;
+  background: rgba(255, 251, 246, 0.7);
+}
+
 .direct-key-notation {
   display: grid;
   flex: 0 0 auto;
@@ -1057,6 +1075,11 @@ a:hover {
   .harmonic-key-notation {
     align-items: flex-start;
     flex-wrap: wrap;
+  }
+
+  .hero-tab-footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .chord-diagrams-head {
