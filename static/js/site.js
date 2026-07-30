@@ -74,6 +74,9 @@
   const scaleNotesContainer = document.querySelector("[data-scale-notes]");
   const harmonicTableBody = document.querySelector("[data-harmonic-table]");
   const chordDiagramsContainer = document.querySelector("[data-chord-diagrams]");
+  const directKeyLabel = document.querySelector("[data-direct-key]");
+  const keySignature = document.querySelector("[data-key-signature]");
+  const keySignatureAccidentals = document.querySelector("[data-key-signature-accidentals]");
   const guitarTuning = [4, 9, 2, 7, 11, 4];
   const guitarStringNames = ["E grave", "A", "D", "G", "B", "E agudo"];
 
@@ -119,8 +122,40 @@
   }
 
   function updateToneLabel() {
+    const directKey = pitchName(analysisRoot) + (analysisMode === "minor" ? "m" : "");
     if (keyLabel) {
-      keyLabel.textContent = pitchName(analysisRoot);
+      keyLabel.textContent = directKey;
+    }
+    if (directKeyLabel) directKeyLabel.textContent = directKey;
+  }
+
+  function keySignatureCount() {
+    const majorSignatures = [0, -5, 2, -3, 4, -1, 6, 1, -4, 3, -2, 5];
+    const minorSignatures = [-3, 4, -1, -6, 1, -4, 3, -2, -7, 0, -5, 2];
+    return (analysisMode === "minor" ? minorSignatures : majorSignatures)[analysisRoot];
+  }
+
+  function renderKeySignature() {
+    const directKey = pitchName(analysisRoot) + (analysisMode === "minor" ? "m" : "");
+    const count = keySignatureCount();
+    const symbol = count >= 0 ? "♯" : "♭";
+    const positions = count >= 0
+      ? [16, 34, 10, 28, 46, 22, 40]
+      : [40, 22, 46, 28, 52, 34, 58];
+    if (keySignatureAccidentals) {
+      keySignatureAccidentals.innerHTML = positions.slice(0, Math.abs(count)).map(function (top, index) {
+        return '<span class="key-signature-accidental" style="--accidental-index:' + index +
+          ";--accidental-top:" + top + 'px">' + symbol + "</span>";
+      }).join("");
+    }
+    if (keySignature) {
+      const accidentalDescription = count === 0
+        ? "sem acidentes"
+        : Math.abs(count) + (count > 0 ? " sustenido" : " bemol") + (Math.abs(count) > 1 ? "s" : "");
+      keySignature.setAttribute(
+        "aria-label",
+        "Tom " + directKey + " em clave de sol, " + accidentalDescription
+      );
     }
   }
 
@@ -525,6 +560,7 @@
     if (analysisKeySelect) analysisKeySelect.value = String(analysisRoot);
     if (analysisModeSelect) analysisModeSelect.value = analysisMode;
     updateToneLabel();
+    renderKeySignature();
     classifyChords();
     if (tabPage?.classList.contains("is-analysis-visible")) {
       renderChordDiagrams();
